@@ -10,8 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 export default function AuthCard() {
   const [activeTab, setActiveTab] = useState("login")
 
+  
+
   return (
-    <Card className="w-[350px] h-full ">
+    <Card className="w-[350px] h-full " id='auth-card'>
       <CardHeader>
         <CardTitle>Lets Start</CardTitle>
         <CardDescription>

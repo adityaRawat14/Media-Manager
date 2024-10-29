@@ -4,7 +4,7 @@ import HomeBg from '@/public/home-bg.svg'
 
 function layout({children}:{children:React.ReactNode}) {
   return (
-    <div className='px-10 py-5 min-h-screen relative'>
+    <div className='px-10 py-5 min-h-screen relative bg-gradient-to-br from-purple-400/80  via-pink-500/20 to-red-500/20'>
     <div
       className='absolute inset-0'
       style={{

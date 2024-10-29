@@ -1,14 +1,33 @@
-import React  from 'react'
+'use client'
+import React, { useEffect, useState , useRef }  from 'react'
 import { Button } from "@/components/ui/button"
-import { MessageSquare, Users, Video, Lock, ArrowRight, GripHorizontal } from 'lucide-react'
+import { MessageSquare, Users, Video, Lock, ArrowRight, GripHorizontal, MessageCircle, Zap } from 'lucide-react'
 import Link from 'next/link'
 import AuthCard from '@/components/auth/AuthCard'
 
 export default function HomePage() {
 
 
+  const [activeFeature, setActiveFeature] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveFeature((prev:any) => (prev + 1) % 4)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const features = [
+    { icon: MessageCircle, title: "Real-time Messaging", description: "Send and receive messages instantly" },
+    { icon: Users, title: "Group Chats", description: "Collaborate with team members easily" },
+    { icon: Lock, title: "End-to-End Encryption", description: "Your conversations are secure" },
+    { icon: Zap, title: "Rich Media Sharing", description: "Share photos, videos, and files seamlessly" },
+  ]
+
+
+
   return (
-    <div className="">
+    <div>
       <div className="container mx-auto px-4 py-8">
         <header className="mb-12 flex justify-between shadow-lg items-center bg-black/90 py-8 pl-4 pr-10 rounded-md">
           <h1 className="text-3xl font-bold text-indigo-200">Chat And Social Media Management Platform</h1>
@@ -25,38 +44,28 @@ export default function HomePage() {
             <h2 className="text-4xl font-bold mb-6">Connect with friends and family, anytime, anywhere</h2>
             <p className="text-lg text-gray-800 mb-8 italic">Experience seamless communication with our feature-rich chat application. Stay connected with those who matter most, whether you're at home or on the go.</p>
             
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
-              <FeatureCard
-                icon={<MessageSquare className="h-8 w-8 text-indigo-500" />}
-                title="Instant Messaging"
-                description="Send and receive messages in real-time with end-to-end encryption."
-              />
-              <FeatureCard
-                icon={<Users className="h-8 w-8 text-indigo-500" />}
-                title="Group Chats"
-                description="Create and manage group conversations with ease."
-              />
-              <FeatureCard
-                icon={<Video className="h-8 w-8 text-indigo-500" />}
-                title="Video Calls"
-                description="Connect face-to-face with high-quality video calls."
-              />
-              <FeatureCard
-                icon={<Lock className="h-8 w-8 text-indigo-500" />}
-                title="Secure"
-                description="Your privacy is our priority with advanced security features."
-              />
-              <FeatureCard
-                icon={<GripHorizontal className="h-8 w-8 text-indigo-500" />}
-                title="Manage Platforms"
-                description="Manage and Analyze social media handles right from here"
-              />
-              
+            
+             <div className="relative h-64 rounded-lg mb-20  ">
+              {features.map((feature, index) => (
+                <div
+                  key={index}
+                  className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${
+                    index === activeFeature ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <div className="text-center p-6">
+                    <feature.icon className="h-16 w-16 text-black mx-auto mb-4" />
+                    <h3 className="text-2xl font-semibold text-black mb-2">{feature.title}</h3>
+                    <p className="text-purple-800">{feature.description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <Button size="lg" className="mb-12">
+           <Link href={'#auth-card'}>
+           <Button size="lg" className="mb-12" >
               Get Started <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            </Button></Link>
 
             <div id="features" className="mb-12">
               <h3 className="text-2xl font-bold mb-4">Why Choose Us?</h3>
@@ -74,7 +83,7 @@ export default function HomePage() {
 
          <AuthCard/>
         </main>
-
+       
         <footer id="about" className="mt-12 text-center text-gray-600">
           <p>&copy; 2024 ChatApp. All rights reserved.</p>
           <p>Designed and built with love for seamless communication.</p>
@@ -84,13 +93,9 @@ export default function HomePage() {
   )
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
-  return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <div className="mb-4 " color='white'>{icon}</div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-black">{description}</p>
-    </div>
-  )
-}
+
+
+
+
+
 

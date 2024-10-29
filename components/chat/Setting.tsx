@@ -17,6 +17,8 @@ import {
 import { Button } from '../ui/button'
 import {  MoreVertical, LogOut, Settings, User } from "lucide-react"
 import { Input } from '../ui/input'
+import { logout } from '@/lib/helpers/auth/auth'
+import { toast } from '@/hooks/use-toast'
 
 
 interface UserProfile {
@@ -32,9 +34,22 @@ function Setting() {
         avatar: "/placeholder-user.jpg"
       });
 
-    const handleLogout = () => {
-        // Implement logout logic here
-        console.log("Logging out...");
+    const handleLogout =async () => {
+      
+       try {
+         await logout()
+         
+         toast({
+          title: "Sucess",
+          description: "logged out sucessfully ",
+        })
+       } catch (error:any) {
+        toast({
+          variant: "destructive",
+          title: "Failed.",
+          description: error.message,
+        })
+       }
       };
     
       const handleProfileUpdate = (name: string, avatar: string) => {

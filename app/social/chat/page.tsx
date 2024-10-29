@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import { Send, Menu,  } from "lucide-react"
 import Setting from '@/components/chat/Setting'
+import { useAppContext } from '@/context/AppContext'
 
 interface Contact {
   id: number;
@@ -22,8 +23,6 @@ interface Message {
   sender: 'user' | 'contact';
 }
 
-
-
 const contacts: Contact[] = [
   { id: 1, name: "Alice Johnson", avatar: "/placeholder-user.jpg", status: 'online' },
   { id: 2, name: "Bob Smith", avatar: "/placeholder-user.jpg", status: 'offline' },
@@ -33,6 +32,12 @@ const contacts: Contact[] = [
 ]
 
 export default function Component() {
+  
+const {user , chats} = useAppContext()
+
+console.log(user);
+
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);

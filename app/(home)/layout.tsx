@@ -1,5 +1,5 @@
 import React from 'react'
-
+import { Toaster } from "@/components/ui/toaster"
 import HomeBg from '@/public/home-bg.svg'
 
 function layout({children}:{children:React.ReactNode}) {
@@ -17,6 +17,7 @@ function layout({children}:{children:React.ReactNode}) {
     />
     <div className='relative z-10'> 
       {children}
+      <Toaster/>
     </div>
   </div>
   )

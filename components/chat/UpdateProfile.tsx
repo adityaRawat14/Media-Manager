@@ -23,11 +23,12 @@ import { useAppContext } from '@/context/AppContext'
 import { upload } from '@/lib/helpers/upload/upload'
 import { updateProfile } from '@/lib/helpers/user/data'
 import { toast } from '@/hooks/use-toast'
+import { Textarea } from '../ui/textarea'
 
 
 
 function UpdateProfile() {
-  const { data } = useAppContext()
+  const { data ,setData} = useAppContext()
   const [tempImage, setTempImage] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
     const [name,setName]=useState<null | string>(null)
@@ -63,10 +64,12 @@ function UpdateProfile() {
         }
 
       await  updateProfile({name,avatar:avatarUrl,bio,uid:data?.uid})
+      
       toast({
         title: "Sucess ",
         description: "Profile updated sucessfully !",
       })
+      setData({...data,avatar:avatarUrl})
       setOpen(false)
     } catch (error) {
         console.log(error);
@@ -161,7 +164,7 @@ function UpdateProfile() {
           </div>
           <div className="flex flex-col w-full gap-1.5">
       <Label htmlFor="message">Bio</Label>
-        <textarea placeholder="Type your message here." id="message" onChange={(e)=>{setBio(e.target.value)}} value={bio?bio:" "} />
+        <Textarea placeholder="Type your message here." id="message" onChange={(e)=>{setBio(e.target.value)}} value={bio?bio:" "} />
     </div>
       <div className='flex justify-between gap-4'>
      

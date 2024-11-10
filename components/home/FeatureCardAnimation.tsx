@@ -1,15 +1,14 @@
 'use client'
 import React, { useEffect, useState  }  from 'react'
-import { Button } from "@/components/ui/button"
-import {  Users, Lock, ArrowRight, MessageCircle, Zap } from 'lucide-react'
-function FeatureCard() {
+import {  Users, Lock, MessageCircle, Zap } from 'lucide-react'
+function FeatureCardAnimation() {
 
     const [activeFeature, setActiveFeature] = useState(0)
 
     useEffect(() => {
       const interval = setInterval(() => {
         setActiveFeature((prev:any) => (prev + 1) % 4)
-      }, 3000)
+      }, 1800)
       return () => clearInterval(interval)
     }, [])
     
@@ -28,7 +27,7 @@ function FeatureCard() {
     <div className="relative h-64 rounded-lg mb-20  ">
     {features.map((feature, index) => (
       <div
-        key={index}
+        key={feature.title}
         className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${
           index === activeFeature ? 'opacity-100' : 'opacity-0'
         }`}
@@ -44,4 +43,4 @@ function FeatureCard() {
   )
 }
 
-export default FeatureCard
+export default FeatureCardAnimation

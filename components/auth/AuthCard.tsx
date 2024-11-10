@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { login, loginWithGithub, loginWithGoogle, OnAuthStateChange, signup } from '@/lib/helpers/auth/auth'
+import { login, loginWithGithub, loginWithGoogle, signup } from '@/lib/helpers/auth/auth'
 
 import { Button } from "@/components/ui/button"
 import { ToastAction } from '../ui/toast'
@@ -19,10 +19,10 @@ export default function AuthCard() {
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const {user,setUser} = useAppContext() 
+  const {authUser,setAuthUser} = useAppContext() 
  
 
-  
+  const router=useRouter()
 
 
 
@@ -35,14 +35,16 @@ export default function AuthCard() {
         description: "Password didn't matched",
         action: <ToastAction altText="Please enter the same passwords">Please enter the same passwords</ToastAction>,
       })
+     
       return
     }
     try {
       await signup({ name, email, password })
       toast({
         title: "Sucess",
-        description: "Account has been created sucessfully .",
+        description: "Account has been created sucessfully ",
       })
+      // router.push("/social/chat")
 
     } catch (error :any) {
       console.error("Signup error:", error)
@@ -52,17 +54,17 @@ export default function AuthCard() {
         description: error.message,
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       })
-    }
+    } 
   }
 
 
   const handleLogin=async (e:any)=>{
-    e.preventDefault()
+  if(e!=null)  e.preventDefault();
     try {
       await login({ email, password })
       toast({
         title: "Sucess",
-        description: " logged in sucessfully  , redirecting... ",
+        description: " logged in sucessfully   ",
       })
 
     } catch (error :any) {
@@ -83,7 +85,7 @@ export default function AuthCard() {
      await loginWithGoogle()
      toast({
       title: "Sucess",
-      description: "logged in sucessfully , redirecting..",
+      description: "logged in sucessfully ",
     })
     } catch (error:any) {
       toast({
@@ -101,7 +103,7 @@ export default function AuthCard() {
      await loginWithGithub()
      toast({
       title: "Sucess",
-      description: "logged in sucessfully , redirecting..",
+      description: "logged in sucessfully ",
     })
     } catch (error:any) {
       toast({
@@ -116,7 +118,7 @@ export default function AuthCard() {
 
 
   return (
-    <Card className="w-[350px] h-full " id='auth-card'>
+    <Card className="w-[350px] h-full " id='auth'>
       <CardHeader>
         <CardTitle>Lets Start</CardTitle>
         <CardDescription>

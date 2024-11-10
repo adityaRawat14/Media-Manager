@@ -1,182 +1,185 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-import { Send, Menu,  } from "lucide-react"
-import Setting from '@/components/chat/Setting'
+import {  Search, ArrowLeft, MessageCircle, Router   } from "lucide-react"
+import Menu  from '@/components/social/Menu'
 import { useAppContext } from '@/context/AppContext'
-
-interface Contact {
-  id: number;
-  name: string;
-  avatar: string;
-  status: 'online' | 'offline';
-}
-
-interface Message {
-  id: number;
-  text: string;
-  sender: 'user' | 'contact';
-}
-
-const contacts: Contact[] = [
-  { id: 1, name: "Alice Johnson", avatar: "/placeholder-user.jpg", status: 'online' },
-  { id: 2, name: "Bob Smith", avatar: "/placeholder-user.jpg", status: 'offline' },
-  { id: 3, name: "Charlie Brown", avatar: "/placeholder-user.jpg", status: 'online' },
-  { id: 4, name: "Diana Prince", avatar: "/placeholder-user.jpg", status: 'offline' },
-  { id: 5, name: "Ethan Hunt", avatar: "/placeholder-user.jpg", status: 'online' },
-]
-
-export default function Component() {
-  
-const {user , chats} = useAppContext()
-
-console.log(user);
+import { addChat, inputUserData } from '@/lib/helpers/user/data'
+import { toast } from '@/hooks/use-toast'
+import {  doc, getDoc, onSnapshot } from 'firebase/firestore'
+import { db } from '@/config/firsbase'
+import ChatList from '@/components/chat/ChatList'
+import ChatArea from '@/components/chat/ChatArea'
+import { useRouter } from 'next/navigation'
 
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+
+export default function Page() {
+const router=useRouter()
+const {  data} = useAppContext()
+
+
+  const [chats,setChats]=useState<any | null>(null)
+  const [selectedChat, setSelectedChat] = useState<any>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [searchText,setSearchText]=useState('')
+  const [searchedUsers,setSearchedUsers]=useState<any | null>(null)
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(scrollToBottom, [messages]);
-
-  const handleSend = () => {
-    if (input.trim() && selectedContact) {
-      const newMessage: Message = {
-        id: messages.length + 1,
-        text: input.trim(),
-        sender: 'user'
-      };
-      setMessages([...messages, newMessage]);
-      setInput('');
+  useEffect(()=>{
+    
+    if(data?.isLoggedIn){
       
-      // Simulate contact response
-      setTimeout(() => {
-        const contactResponse: Message = {
-          id: messages.length + 2,
-          text: `This is a simulated response from ${selectedContact.name}.`,
-          sender: 'contact'
-        };
-        setMessages(prevMessages => [...prevMessages, contactResponse]);
-      }, 1000);
-    }
-  };
 
-  const handleContactSelect = (contact: Contact) => {
-    setSelectedContact(contact);
-    setMessages([]);  // Clear messages when switching contacts
-    setIsSidebarOpen(false);  // Close sidebar on mobile after selecting a contact
-  };
+      
+      const chatRef=doc(db,"chats",data.uid);
+      const unsub=onSnapshot(chatRef,async ( res:any)=>{       
+        const chatItems=res.data().chatData;        
+        const tempData=[];
+
+        
+        for(const item of chatItems){
+          const userRef=doc(db,"users",item.rId);
+          const userSnap=await getDoc(userRef)
+          const userData=userSnap.data()
+          tempData.push({
+            ...item,userData
+          })
+          
+        }
+        setChats(tempData)
+
+        
+      })
+      return ()=>{
+        unsub()
+      }
+    }
+  },[data])
+
 
  
+ const handleSearch=async (e:any)=>{
+    e.preventDefault()
+    if(searchText.trim().length==0) return ;
+    try {
+      let users=await inputUserData(searchText,data.uid , chats) 
+     if(users==null) setSearchedUsers([])
+      else {
+        setSearchedUsers(users)
+      }
+  
+    } catch (error) {
+      setSearchedUsers([])
+    }
+  }
+
+
+  const createNewChat=async (usersData  :any , myId :any)=>{
+      try {
+        await addChat(usersData,myId)
+
+        toast({
+          variant: "destructive",
+          title: "sucess",
+          description: "user added to the list sucessfully !!",
+        })
+        
+        setSearchedUsers(null)
+
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description: "failed to add user to the list !!",
+        })
+      }
+
+
+  }
+
+
+
+
+
+
+
+
   return (
     <div className="flex  bg-background">
       {/* Sidebar */}
       <aside className={`border-r w-80 flex-shrink-0 ${isSidebarOpen ? 'block' : 'hidden'} md:block`}>
-        <div className="p-4 border-b flex justify-between items-center">
+      <div className="p-4 border-b">
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Contacts</h2>
-          <Setting/>
+          <Menu  />
         </div>
-        <ScrollArea className="h-[calc(100vh-5rem)]">
-          {contacts.map(contact => (
-            <div
-              key={contact.id}
-              className={`flex items-center p-4 cursor-pointer hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}
-              onClick={() => handleContactSelect(contact)}
-            >
-              <Avatar className="h-10 w-10 mr-4">
-                <AvatarImage src={contact.avatar} alt={contact.name} />
-                <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-grow">
-                <h3 className="font-semibold">{contact.name}</h3>
-                <p className={`text-sm ${contact.status === 'online' ? 'text-green-500' : 'text-gray-500'}`}>
-                  {contact.status}
-                </p>
-              </div>
-            </div>
-          ))}
-        </ScrollArea>
-      </aside>
-
-      {/* Main Chat Area */}
-      <div className="flex-grow flex flex-col">
-        <header className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center">
-            <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-              <Menu className="h-6 w-6" />
-            </Button>
-            {selectedContact ? (
-              <>
-                <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage src={selectedContact.avatar} alt={selectedContact.name} />
-                  <AvatarFallback>{selectedContact.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <h1 className="text-xl font-bold">{selectedContact.name}</h1>
-              </>
-            ) : (
-              <h1 className="text-xl font-bold">Select a contact</h1>
-            )}
-          </div>
-       
-        </header>
-        
-        <ScrollArea className="flex-grow p-4 h-[72vh] md:h-full">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[70%] rounded-lg p-3 ${
-                    message.sender === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  }`}
-                >
-                  {message.text}
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-        
-        <div className="p-4 border-t">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend();
-            }}
-            className="flex space-x-2"
-          >
-            <Input
-              type="text"
-              placeholder={selectedContact ? "Type a message..." : "Select a contact to start chatting"}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="flex-grow"
-              disabled={!selectedContact}
-            />
-            <Button type="submit" size="icon" disabled={!selectedContact}>
-              <Send className="h-4 w-4" />
-              <span className="sr-only">Send</span>
-            </Button>
-          </form>
+        <div className=" flex gap-2 w-full items-center">
+      { searchedUsers  &&  <ArrowLeft onClick={()=>{setSearchedUsers(null);setSearchText("")}} className='hover:text-black text-gray-700 cursor-pointer' size={30}  />}
+        <form className='py-2 flex gap-2 items-center w-full' action="" onSubmit={handleSearch}>
+        <Input
+            type="text"
+            placeholder="Search users.."
+            className="pl-3 w-full"
+            value={searchText}
+            onChange={(e:any)=>{setSearchText(e.target.value)}}
+          />
+          <Button variant={'outline'} size={"icon"} onClick={handleSearch} type='submit'><Search className=" left-2  h-full w-full text-black" /></Button>
+        </form>
         </div>
       </div>
+      <ScrollArea className="h-[calc(100vh-11rem)]">
+        {
+           searchedUsers  ?
+
+           searchedUsers.length==0 ? 
+           <div className='text-center py-8 font-semibold text-gray-700'>No user found with this name </div>:
+
+          <div>
+           {searchedUsers.map((user:any) =>{
+            
+           return ( 
+           <div
+              key={user.uid}
+              className={`flex items-center p-4 cursor-pointer hover:bg-accent ${selectedChat?.uid == user.uid ? ' bg-accent ' : ''}`}
+              >
+              
+              <Avatar className="h-10 w-10 mr-4">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+
+              <div className="flex justify-between w-full pr-4">
+               <div className='flex-grow'>
+               <h3 className="font-semibold">{user.name}</h3>
+                <p className={`text-[6px] `}>
+                  {user.bio?user.bio:""}
+                </p>
+               </div>
+               <MessageCircle size={25} className='text-gray-500 hover:text-black'  onClick={()=>{createNewChat(user,data.uid)}}/>
+              </div>
+            </div>)
+            }
+          )}
+        </div>
+
+        
+          : <ChatList chats={chats} selectedChat={selectedChat} setChats={setChats} setSelectedChat={setSelectedChat} data={data}/>
+        
+      
+      }
+      </ScrollArea>
+    </aside>
+
+      {/* Main Chat Area */}
+
+      <ChatArea setIsSidebarOpen={setIsSidebarOpen} data={data} selectedChat={selectedChat} />      
+
+
     </div>
   )
 }

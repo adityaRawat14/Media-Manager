@@ -1,6 +1,6 @@
-import {auth, db , doc , setDoc ,createUserWithEmailAndPassword , signInWithEmailAndPassword, signOut, signInWithPopup, googleProvider, githubProvider} from '@/config/firsbase'
+import {auth, db , doc , setDoc ,createUserWithEmailAndPassword , signInWithEmailAndPassword, signOut, signInWithPopup, googleProvider, githubProvider, getDoc} from '@/config/firsbase'
 import { FirebaseError } from 'firebase/app'
-import { onAuthStateChanged } from 'firebase/auth'
+import { onAuthStateChanged as OnAuthStateChange } from 'firebase/auth'
 
 
 
@@ -25,12 +25,13 @@ export const signup= async ({name,email,password}:signupData)=>{
         const res=await createUserWithEmailAndPassword(auth,email , password)
         const user=res.user
         await setDoc(doc(db,"users",user.uid),{
-                id:user.uid,
+                uid:user.uid,
                 name,
                 avatar:"",
-                bio:"",
+                bio:"Hey there! I am using Media wave",
                 lastSeen:Date.now(),
                 email,
+                createdAt:Date.now()
         })
         await setDoc(doc(db,"chats",user.uid),{
                chatData:[]
@@ -90,49 +91,80 @@ export const logout=async ()=>{
         
     }
 }
-
 export const loginWithGoogle = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-  
-      const userDocRef = doc(db, 'users', user.uid);
-      await setDoc(userDocRef, {
-        uid: user.uid,
-        name: user.displayName,
-        email: user.email,
-        avatar: user.photoURL,
-      }, { merge: true });
-  
-      return user;
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, {
+            uid: user.uid,
+            name: user.displayName,
+            email: user.email,
+            avatar: user.photoURL,
+            createdAt:Date.now(),
+            lastSeen:Date.now()
+
+        }, { merge: true });
+
+        const chatRef = doc(db, "chats", user.uid);
+        
+        // Check if chat document already exists
+        const chatDoc = await getDoc(chatRef);
+        if (!chatDoc.exists()) {
+            await setDoc(chatRef, {
+                chatData: []
+            });
+        }
+
+        return user;
     } catch (error) {
-      console.error("Error during Google sign-in:", error);
-      throw new Error("failed to login with google account ");
+        console.error("Error during Google sign-in:", error);
+        throw new Error("failed to login with google account ");
     }
-  };
+};
+
+// GitHub Login
 export const loginWithGithub = async () => {
     try {
-      const result = await signInWithPopup(auth, githubProvider);
-      const user = result.user;
-  
-      const userDocRef = doc(db, 'users', user.uid);
-      await setDoc(userDocRef, {
-        uid: user.uid,
-        name: user.displayName,
-        email: user.email,
-        avatar: user.photoURL,
-      }, { merge: true });
-  
-      return user;
+        const result = await signInWithPopup(auth, githubProvider);
+        const user = result.user;
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, {
+            uid: user.uid,
+            name: user.displayName,
+            email: user.email,
+            avatar: user.photoURL,
+            createdAt:Date.now(),
+            lastSeen:Date.now()
+
+        }, { merge: true });
+
+        const chatRef = doc(db, "chats", user.uid);
+        
+        // Check if chat document already exists
+        const chatDoc = await getDoc(chatRef);
+        if (!chatDoc.exists()) {
+            await setDoc(chatRef, {
+                chatData: []
+            });
+        }
+
+        return user;
     } catch (error) {
-      console.error("Error during Github sign-in:", error);
-      throw new Error("failed to login with github account ");
+        console.error("Error during Github sign-in:", error);
+        throw new Error("failed to login with github account ");
     }
-  };
+};
 
 
 
 
-  export const OnAuthStateChange=(cb:any)=> {
-    return onAuthStateChanged(auth, cb);
+  export const onAuthStateChange=(cb:any)=> {
+    return OnAuthStateChange(auth, cb);
 }
+
+
+
+

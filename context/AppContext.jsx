@@ -1,8 +1,12 @@
 "use client"
 
-import { OnAuthStateChange } from '@/lib/helpers/auth/auth';
-import { useRouter } from 'next/navigation';
+
+import { onAuthStateChange } from '@/lib/helpers/auth/auth';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { loadUserData } from '@/lib/helpers/user/data';
+import { useRouter } from 'next/navigation';
+
+//  name , email , id  , avatar , lastSeen , 
 
 
 const AppContext = createContext();
@@ -12,36 +16,97 @@ export const useAppContext=()=>{
 }
 
 export function AppContextProvider({children}) {
-    const [user,setUser]=useState(null)
-    const [chats,setChats]=useState(null)
-    let path;
+  const router=useRouter()
+    const [authUser,setAuthUser]=useState(null)
 
-    const router=useRouter()
+    const [isLoading,setIsLoading]=useState(true)
+    const [data,setData]=useState(null)
+
+
     const handleAuthStateChange=async (u)=>{
-      
-      if(u){
-        setUser(u)
-        if(path=='/') router.push('/social/chat');
 
-      }else{
-        if(path=='/social/chat')  router.push('/');
-          setUser(null)
-         
+      
+      
+      
+      if(data!=null && u==null){ // means user logged out
+        console.log('user is logging out ...');
+        setData(
+          {isLoggedIn:false}
+        )
+        
       }
-  
+      
+      
+      
+      setAuthUser(u);
+     
     }
 
 
-    useEffect(()=>{
-    path  =window.location.pathname;
-      OnAuthStateChange(handleAuthStateChange) 
-      if(!user && path=="/social/chat") {
-        router.push('/')
+
+
+    const loadData=async ()=>{
+      try {
+          const d=await loadUserData(authUser.uid)
+          
+          if(d!=null){
+             setData(
+              {
+                ...d,isLoggedIn:true
+              }
+             );
+            }else{
+              setData({
+                isLoggedIn:false
+              })
+            }
+            
+
+          
+      } catch (error) {
+        console.log('error in loading data',error);
+        setData({
+          isLoggedIn:false
+        })
       }
+      
+     }
+
+
+
+
+    
+     
+
+useEffect(()=>{
+  if(authUser!=null) {
+    loadData();
+}
+
+    setData({isLoggedIn:false})
+
+setIsLoading(false)
+
+},[authUser])
+
+
+
+    useEffect(()=>{
+   const listener=   onAuthStateChange(handleAuthStateChange) 
+
+    return  ()=> listener()
     },[])
 
+
+
+
+
+
+
+
+
   return (
-    <AppContext.Provider value={{ user,chats,setUser,setChats }}>
+    <AppContext.Provider value={{ authUser,setAuthUser  , isLoading , data,setData}}>
       {children}
     </AppContext.Provider>
   );

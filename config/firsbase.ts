@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import {getAuth} from "firebase/auth"
-import {getFirestore , doc , setDoc} from "firebase/firestore"
+import {getFirestore , doc , setDoc , getDoc} from "firebase/firestore"
   import { createUserWithEmailAndPassword , signInWithEmailAndPassword , signOut , signInWithPopup  , GoogleAuthProvider , GithubAuthProvider} from "firebase/auth";
 // import { getAnalytics } from "firebase/analytics";
 
@@ -19,10 +19,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth=getAuth(app)
+
 export const db=getFirestore(app)
 const googleProvider = new GoogleAuthProvider()
 const githubProvider = new GithubAuthProvider;
-export {doc,setDoc , createUserWithEmailAndPassword ,signInWithEmailAndPassword , signOut , signInWithPopup  , googleProvider, githubProvider}
+export {doc,setDoc , createUserWithEmailAndPassword ,signInWithEmailAndPassword , signOut , signInWithPopup  , googleProvider, githubProvider , getDoc}
 
 
  

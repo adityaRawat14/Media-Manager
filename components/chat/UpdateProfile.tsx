@@ -69,7 +69,7 @@ function UpdateProfile() {
         title: "Sucess ",
         description: "Profile updated sucessfully !",
       })
-      setData({...data,avatar:avatarUrl})
+      setData({...data,avatar:avatarUrl,bio,name})
       setOpen(false)
     } catch (error) {
         console.log(error);
@@ -126,7 +126,7 @@ function UpdateProfile() {
             </Avatar>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="name" className="text-sm font-medium">
+            <Label  className="text-sm font-medium">
               Name
             </Label>
             <Input

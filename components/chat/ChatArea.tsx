@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import { Send, Menu as MenuIcon, Image as ImageIcon, X, Paperclip, Download } from "lucide-react"
+import { Send, Menu as MenuIcon, Image as ImageIcon, X, Paperclip, Download, Heart, Laugh, Frown, Skull, ThumbsUp } from "lucide-react"
 import Image from 'next/image'
 import { Label } from '@/components/ui/label'
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import { db } from '@/config/firsbase'
 import { upload } from '@/lib/helpers/upload/upload'
 import { Input } from '../ui/input'
 import { toast } from '@/hooks/use-toast'
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface ChatAreaProps {
   selectedChat: any
@@ -20,7 +21,15 @@ interface ChatAreaProps {
   setIsSidebarOpen: any
 }
 
-function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
+const reactionEmojis = [
+  { icon: Heart, name: 'heart' },
+  { icon: Laugh, name: 'laugh' },
+  { icon: Frown, name: 'sad' },
+  { icon: Skull, name: 'skeleton' },
+  { icon: ThumbsUp, name: 'thumbsup' },
+]
+
+export default function Component({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<any>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -29,11 +38,7 @@ function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
   const [tempImagePreview, setTempImagePreview] = useState<string | null>(null);
   const [tempFile, setTempFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
-    }
-  }, [messages]);
+
 
   useEffect(() => {
     setMessages([])
@@ -56,30 +61,22 @@ function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
     if (input.trim().length === 0 && !tempImage && !tempFile) return;
 
     try {
-      let messageContent: any = {};
+      let messageContent: any = {
+        sId: data.uid,
+        createdAt: new Date(),
+        reactions: {}
+      };
 
       if (tempImage) {
         const fileUrl = await upload(tempImage);
-        messageContent = {
-          sId: data.uid,
-          image: fileUrl,
-          fileName: tempImage.name,
-          createdAt: new Date()
-        };
+        messageContent.image = fileUrl;
+        messageContent.fileName = tempImage.name;
       } else if (tempFile) {
         const fileUrl = await upload(tempFile);
-        messageContent = {
-          sId: data.uid,
-          file: fileUrl,
-          fileName: tempFile.name,
-          createdAt: new Date()
-        };
+        messageContent.file = fileUrl;
+        messageContent.fileName = tempFile.name;
       } else {
-        messageContent = {
-          sId: data.uid,
-          text: input,
-          createdAt: new Date()
-        };
+        messageContent.text = input;
       }
 
       await updateDoc(doc(db, "messages", selectedChat.messageId), {
@@ -127,6 +124,10 @@ function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
         description: "Failed to send message",
       })
     }
+
+    if (messagesEndRef.current) {
+messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+}
   }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,10 +164,54 @@ function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
 
   const handleDownload = async (url: string, fileName: string) => {
       window.open(url)
-   
   }
+
+  const handleReaction = async (messageIndex: number, reactionType: string) => {
+    try {
+      const updatedMessages = [...messages];
+      const message = updatedMessages[messageIndex];
+      
+      if (!message.reactions) {
+        message.reactions = {};
+      }
+
+      if (message.reactions[reactionType]?.includes(data.uid)) {
+        // Remove the reaction if it already exists
+        message.reactions[reactionType] = message.reactions[reactionType].filter((id: string) => id !== data.uid);
+      } else {
+        // Add the reaction
+        if (!message.reactions[reactionType]) {
+          message.reactions[reactionType] = [];
+        }
+        message.reactions[reactionType].push(data.uid);
+      }
+
+      await updateDoc(doc(db, "messages", selectedChat.messageId), {
+        messages: updatedMessages
+      });
+
+      setMessages(updatedMessages);
+    } catch (error) {
+      console.log('error in adding reaction:', error);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "Failed to add reaction",
+      })
+    }
+  }
+
+  const formatMessageTime = (createdAt: { seconds: number; nanoseconds: number }) => {
+    const date = new Date(createdAt.seconds * 1000 + createdAt.nanoseconds / 1000000);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'short' }).toLowerCase();
+    return `${hours}:${minutes} | ${day} ${month}`;
+    };
+
   return (
-    <div className="flex-grow flex flex-col">
+    <div className="flex-grow flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center">
           <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={() => setIsSidebarOpen((prev: any) => !prev)}>
@@ -179,7 +224,7 @@ function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
                   <AvatarImage src={selectedChat.userData.avatar} alt={selectedChat.userData.name} />
                   <AvatarFallback>{selectedChat.userData.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <h1 className="text-xl font-semibold text-slate-700">{selectedChat.userData.name}</h1>
+                <h1 className="text-xl font-semibold text-slate-700 truncate max-w-[150px] sm:max-w-[200px] md:max-w-full">{selectedChat.userData.name}</h1>
               </div>
             </UserProfileModal>
           ) : (
@@ -188,8 +233,8 @@ function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
         </div>
       </header>
 
-      <ScrollArea className="flex-grow p-4 h-[72vh]">
-        <div className="space-y-4">
+      <ScrollArea className="flex-grow p-4 h-[calc(100vh-160px)]">
+        <div className="space-y-7">
           {messages.length == 0 && selectedChat != null ?
             <div className='font-semibold text-gray-500 w-full h-full flex items-center justify-center mt-48'>
               send message to start the conversation !
@@ -199,42 +244,80 @@ function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
               return (
                 <div
                   key={index}
-                  className={`flex ${message.sId === data.uid ? 'justify-end' : 'justify-start'}`}
+                  className={`flex flex-col ${message.sId === data.uid ? 'items-end' : 'items-start'}`}
                 >
-                  {
-                    message["image"] ? (
-                      <div className="relative group">
-                        <Image 
-                          alt='img' 
-                          src={message.image} 
-                          width={150} 
-                          height={200} 
-                          className='my-4 rounded-lg cursor-pointer' 
-                         
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                          <Download   onClick={() => handleDownload(message.image, message.fileName || 'image.jpg')} className="text-white cursor-pointer" />
+                   <div className=" flex justify-end  text-[10px] text-gray-500 mb-[2px]">
+  {formatMessageTime(message.createdAt)}
+</div>
+                  <div className={`flex items-end ${message.sId === data.uid ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className="flex relative flex-col">
+                      {
+                        message["image"] ? (
+                          <div className="relative group">
+                            <Image 
+                              alt='img' 
+                              src={message.image} 
+                              width={150} 
+                              height={200} 
+                              className='rounded-lg cursor-pointer max-w-[200px] sm:max-w-[250px] md:max-w-[300px]' 
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                              <Download onClick={() => handleDownload(message.image, message.fileName || 'image.jpg')} className="text-white cursor-pointer" />
+                            </div>
+                          </div>
+                        ) : message["file"] ? (
+                          <div 
+                            className="flex items-center p-2 bg-blue-100 rounded-lg cursor-pointer group max-w-[200px] sm:max-w-[250px] md:max-w-[300px]"
+                            onClick={() => handleDownload(message.file, message.fileName)}
+                          >
+                            <Paperclip className="mr-2 flex-shrink-0" size={15} />
+                            <span className="truncate">{message.fileName}</span>
+                            <Download size={20} className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                          </div>
+                        ) : (
+                          <div className={`max-w-[200px] sm:max-w-[250px] md:max-w-[300px] rounded-lg p-3 ${message.sId !== data.uid ? 'bg-primary text-primary-foreground' : 'bg-muted'}`} >
+                            {message.text}
+                          </div>
+                        )
+                      }
+                      <div className={`flex mt-1 absolute bottom-[-10px] right-0 space-x-1 ${message.sId === data.uid ? 'justify-end' : 'justify-start'}`}>
+                        {Object.entries(message.reactions || {}).map(([type, users]: [string, any]) => (
+                          users.length > 0 && (
+                            <div key={type} className="flex items-center bg-gray-200 rounded-full px-1 py-0.5 text-xs">
+                              {React.createElement(reactionEmojis.find(emoji => emoji.name === type)?.icon || 'span', { size: 10 })}
+                              <span className="ml-0.5 text-[10px]">{users.length}</span>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 rounded-full p-0 mx-1">
+                          <span className="text-xs">+</span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-1">
+                        <div className="flex space-x-1">
+                          {reactionEmojis.map((emoji) => (
+                            <Button
+                              key={emoji.name}
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0"
+                              onClick={() => handleReaction(index, emoji.name)}
+                            >
+                              <emoji.icon className="h-4 w-4" />
+                            </Button>
+                          ))}
                         </div>
-                      </div>
-                    ) : message["file"] ? (
-                      <div 
-                        className="flex items-center p-2 bg-blue-100 rounded-lg cursor-pointer group"
-                        onClick={() => handleDownload(message.file, message.fileName)}
-                      >
-                        <Paperclip className="mr-2 " size={15} />
-                        <span>{message.fileName}</span>
-                        <Download size={20} className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    ) : (
-                      <div className={`max-w-[70%] rounded-lg p-3 ${message.sId !== data.uid ? 'bg-primary text-primary-foreground' : 'bg-muted'}`} >
-                        {message.text}
-                      </div>
-                    )
-                  }
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                 
                 </div>
               )
-            }
-            )
+            })
           }
           <div ref={messagesEndRef} />
         </div>
@@ -254,11 +337,11 @@ function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
         )}
         {tempFile && (
           <div className="flex items-center mb-2 p-2 bg-blue-100 rounded-lg">
-            <Paperclip className="mr-2" />
-            <span>{tempFile.name}</span>
+            <Paperclip className="mr-2 flex-shrink-0" />
+            <span className="truncate">{tempFile.name}</span>
             <button
               onClick={removeTempFile}
-              className="ml-2 bg-red-500 text-white rounded-full p-1"
+              className="ml-2 bg-red-500 text-white rounded-full p-1 flex-shrink-0"
             >
               <X size={16} />
             </button>
@@ -296,5 +379,3 @@ function ChatArea({ selectedChat, data, setIsSidebarOpen }: ChatAreaProps) {
     </div>
   )
 }
-
-export default ChatArea

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-import {  Search, ArrowLeft, MessageCircle, Router   } from "lucide-react"
+import {  Search, ArrowLeft, UserRoundPlus   } from "lucide-react"
 import Menu  from '@/components/social/Menu'
 import { useAppContext } from '@/context/AppContext'
 import { addChat, inputUserData } from '@/lib/helpers/user/data'
@@ -156,11 +156,11 @@ const {  data} = useAppContext()
               <div className="flex justify-between w-full pr-4">
                <div className='flex-grow'>
                <h3 className="font-semibold">{user.name}</h3>
-                <p className={`text-[6px] `}>
+                <p className={`text-[9px] text-gray-600 `}>
                   {user.bio?user.bio:""}
                 </p>
                </div>
-               <MessageCircle size={25} className='text-gray-500 hover:text-black'  onClick={()=>{createNewChat(user,data.uid)}}/>
+               <UserRoundPlus size={25} className='text-gray-500 hover:text-black'  onClick={()=>{createNewChat(user,data.uid)}}/>
               </div>
             </div>)
             }

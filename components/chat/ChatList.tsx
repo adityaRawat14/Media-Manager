@@ -10,6 +10,15 @@ interface ChatProps{
     data:any
 }
 function ChatList({chats,setChats , setSelectedChat , selectedChat,data}:ChatProps) {
+
+
+
+  if(chats?.length==0){
+    return <div className='flex w-full justify-center pt-8'>
+      <span className= ' text-[14px] text-gray-700 font-semibold '>Add friends to start the conversations</span>
+    </div>
+  }
+
   return (
     <div>
     {chats?.map((chat:any) => {

@@ -12,59 +12,55 @@ const instructions = [
     content: 'This guide will help you get started with our application. Follow along to learn the basics!'
   },
   {
-    title: 'Dashboard Overview',
-    content: 'Your dashboard shows an overview of your activity. You can see your recent projects and tasks here.'
+    title: 'Chat interface',
+    content: 'Add user to your chat list by searching their name and clicking add friend icon'
   },
   {
-    title: 'Creating a New Project',
-    content: 'To create a new project, click the "+" button in the top right corner of the dashboard.'
+    title: 'Start the chat',
+    content: 'After sucessful adding you can now chat with your new friend'
   },
   {
-    title: 'Collaborating with Team',
-    content: 'Invite team members to your projects by clicking on the "Invite" button within a project.'
+    title: 'Put some emotions!',
+    content: 'Along side with chatting you also can react to messages with emojies'
   },
   {
-    title: 'Need Help?',
-    content: 'If you ever need assistance, click on the "?" icon in the bottom right corner to access our help center.'
+    title: 'file sharing',
+    content: 'Cherry on the top is now you can share files and images to people!'
   }
 ]
 
-export default function FirstTimeUserPopover() {
-  const [isOpen, setIsOpen] = useState(false)
+export default function Overview({isOpen,setIsOpen}:any) {
   const [currentStep, setCurrentStep] = useState(0)
 
-  useEffect(() => {
-    // Check if it's the user's first time (you might want to use a more persistent storage in a real app)
-    const isFirstTime = !localStorage.getItem('hasSeenIntro')
-    if (isFirstTime) {
-      setIsOpen(true)
-    }
-  }, [])
+
 
   const handleNext = () => {
     if (currentStep < instructions.length - 1) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep((currentStep + 1))
+    }
+    if(currentStep === instructions.length) {
+      setIsOpen(false)
     }
   }
 
   const handleBack = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep((currentStep - 1))
     }
+  
   }
 
   const handleSkip = () => {
     setIsOpen(false)
-    localStorage.setItem('hasSeenIntro', 'true')
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover  open={isOpen} >
       <PopoverTrigger asChild>
         <Button variant="outline" className="hidden">Trigger</Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80">
-        <Card>
+      <PopoverContent className="w-[400px] mt-[30%] ml-[30%]">
+        <Card >
           <CardHeader>
             <CardTitle>{instructions[currentStep].title}</CardTitle>
           </CardHeader>
@@ -87,7 +83,6 @@ export default function FirstTimeUserPopover() {
               variant="outline"
               size="icon"
               onClick={handleNext}
-              disabled={currentStep === instructions.length - 1}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

@@ -7,33 +7,20 @@ import {
     DropdownMenuItem, 
     DropdownMenuTrigger 
   } from "@/components/ui/dropdown-menu"
-  import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-  } from "@/components/ui/dialog"
-  import { Label } from "@/components/ui/label"
+
 import { Button } from '../ui/button'
 import {  MoreVertical, LogOut, Settings, User, LayoutGrid, Upload } from "lucide-react"
-import { Input } from '../ui/input'
 import { logout } from '@/lib/helpers/auth/auth'
 import { toast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAppContext } from '@/context/AppContext'
 import UpdateProfile from '../chat/UpdateProfile'
+import Overview from './Overview'
 
-interface UserProfile {
-    name: string;
-    avatar: string;
-  }
 
 
   
 function Menu() {
-
+const [isOpen,setIsOpen]=useState<boolean>( false)
 
     const router=useRouter()
 
@@ -78,11 +65,14 @@ function Menu() {
         <LogOut className="mr-2 h-4 w-4" />
         <span>Log out</span>
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleLogout}>
+      <DropdownMenuItem onClick={()=>{setIsOpen(!isOpen)}} >
         <LayoutGrid className="mr-2 h-4 w-4" />
         <span>Overview </span>
+        
+        
       </DropdownMenuItem>
     </DropdownMenuContent>
+    <Overview  isOpen={isOpen} setIsOpen={setIsOpen} />
   </DropdownMenu>
   )
 }

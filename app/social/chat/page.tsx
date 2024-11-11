@@ -20,7 +20,6 @@ import { useRouter } from 'next/navigation'
 
 
 export default function Page() {
-const router=useRouter()
 const {  data} = useAppContext()
 
 
@@ -38,18 +37,20 @@ const {  data} = useAppContext()
       
       const chatRef=doc(db,"chats",data.uid);
       const unsub=onSnapshot(chatRef,async ( res:any)=>{       
-        const chatItems=res.data().chatData;        
+        const chatItems=res.data()?.chatData;        
         const tempData=[];
 
-        
-        for(const item of chatItems){
-          const userRef=doc(db,"users",item.rId);
-          const userSnap=await getDoc(userRef)
-          const userData=userSnap.data()
-          tempData.push({
-            ...item,userData
-          })
-          
+        if(!!chatItems && chatItems.length>0){
+          for(const item of chatItems){
+            const userRef=doc(db,"users",item.rId);
+            const userSnap=await getDoc(userRef)
+            const userData=userSnap.data()
+            tempData.push({
+              ...item,userData
+            })
+            
+          }
+
         }
         setChats(tempData)
 
@@ -84,12 +85,13 @@ const {  data} = useAppContext()
         await addChat(usersData,myId)
 
         toast({
-          variant: "destructive",
           title: "sucess",
           description: "user added to the list sucessfully !!",
         })
-        
+
         setSearchedUsers(null)
+        setSearchText("");
+        
 
       } catch (error) {
         toast({

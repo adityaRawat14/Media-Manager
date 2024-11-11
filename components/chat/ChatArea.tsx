@@ -46,7 +46,6 @@ export default function Component({ selectedChat, data, setIsSidebarOpen }: Chat
 
     const msgId = selectedChat.messageId;
     const unsub = onSnapshot((doc(db, "messages", msgId)), (res: any) => {
-      console.log(res.data());
 
       if (res?.data()?.messages?.length > 0) {
         setMessages(res.data().messages)
@@ -111,10 +110,17 @@ export default function Component({ selectedChat, data, setIsSidebarOpen }: Chat
       setTempImagePreview(null)
       setTempFile(null)
       
+     if(tempImage){
       toast({
         title: "Success!",
-        description: tempImage ? "Image sent successfully" : tempFile ? "File sent successfully" : "Message sent successfully",
+        description: "Image sent sucessfully !"
       })
+     }else if(tempFile){
+      toast({
+        title: "Success!",
+        description: "File sent sucessfully !"
+      })
+     }
     } catch (error) {
       console.log('error in sending message:', error);
 
@@ -280,7 +286,7 @@ messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
                           </div>
                         )
                       }
-                      <div className={`flex mt-1 absolute bottom-[-10px] right-0 space-x-1 ${message.sId === data.uid ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`flex mt-1 absolute bottom-[-10px] right-0 space-x-1 border-[2px] bg-white rounded-full border-white ${message.sId === data.uid ? 'justify-end' : 'justify-start'}`}>
                         {Object.entries(message.reactions || {}).map(([type, users]: [string, any]) => (
                           users.length > 0 && (
                             <div key={type} className="flex items-center bg-gray-200 rounded-full px-1 py-0.5 text-xs">

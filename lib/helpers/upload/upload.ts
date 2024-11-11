@@ -12,18 +12,19 @@ export const upload=async (file:any)=>{
         uploadTask.on('state_changed',(snapshot)=>{
             const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100
             console.log('progress',progress);
-            switch(snapshot.state){
+            switch(snapshot.state){ 
                 case 'paused':
                     console.log('paused');
                     break;
                 case 'running':
                 console.log('uploading'); 
                 break;
-                
+                case 'error':
+                throw new Error("failed")
                     
             }
             
-        },
+        }, 
         (error)=>{
            console.log('error in upload:',error);
             reject()

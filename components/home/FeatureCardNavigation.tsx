@@ -3,8 +3,9 @@ import Link from "next/link"
 export default function FeatureCardNavigation() {
   const socialItems = [
     { name: "Chat", path:'/social/chat' },
+    { name: "Facebook", path:'/social/facebook' },
     { name: "Instagram", path:'/social/instagram' },
-    { name: "Twitter" , path:'/social' },
+    { name: "Twitter", path:'/social/X' },
   ]
 
   return (
